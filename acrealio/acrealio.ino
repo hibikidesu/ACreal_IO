@@ -3,12 +3,6 @@
 #include "LedBoard.h"
 #include "IoBoard.h"
 #include "SoftPWMRGB.h"
-#include "CardDispenser.h"
-#include "RR10.h"
-#include "SL015M.h"
-#include "Ddr.h"
-
-
 
 #define MINTIME 14                // Min time between 2 sent packet(Min is 14ms, Max is around 50ms) some games require this
 #define MAX_NODES 3
@@ -34,158 +28,12 @@ byte nbnodes; // nodes count (currently supports 1 or 2)
 byte node_id; //id of first node (may be != 1 when used with other physical nodes)
 
 Node *nodes[MAX_NODES];//nodes array
+IoBoard board("KFCA");//io board
 
-//nodes delaraction (static allocation)
-
-#if GAMETYPE == 0  //pop'n music with card dispenser
-
-Reader nod1;//first reader
-CardDispenser nod2("HBHI"); //card dispenser
-
-#elif GAMETYPE == 1 //1 reader
-
-Reader nod1;//first reader
-
-#elif GAMETYPE == 2 //2 readers
-
-Reader nod1;//first reader
-
-Reader nod2;//second reader
-
-#elif GAMETYPE == 3 // reader + leboard
-
-Reader nod1;//first reader
-LedBoard nod2("LEDB");//led board
-
-#elif GAMETYPE == 4 // reader + ioboard
-
-Reader nod1;//first reader
-IoBoard nod2("KFCA");//io board
-
-#else //2 readers + DDR LED board ?
-
-Reader nod1;//first reader
-
-Reader nod2;//second reader
-
-Ddr nod3;
-//LedBoard nod3("LEDB");//led board
-
-#endif
-
-
-//1P rfid module allocation
-
-#if RFID_MODULE1 == 1
-SL015M mod1;
-#else
-RR10 mod1;
-#endif
-
-
-
-//2P rfid module allocation
-#if GAMETYPE == 2 || GAMETYPE == 5
-#if RFID_MODULE2 == 1
-SL015M mod2;
-#else
-RR10 mod2;
-#endif
-#endif
-
-
-//
-// Arduino setup, run once at startup
-// Init nodes depending on gametype
-// feel free to change this code to get the nodes that suits your needs
-//
 void setup()
 {
-    // set nodes configuration
-
-    //set first rfid module
-    mod1.setPins(R1_DET,&R1_SER);
-    nod1.setRfidModule(&mod1);
-
-#if GAMETYPE == 0  //pop'n music with card dispenser
-
-    nod1.setrCode("ICCA",0);
-    nod1.setkeypadpins(K1_A,K1_B,K1_C,K1_1,K1_2,K1_3,K1_4);//3cols,4rows
-    nodes[0] = &nod1;
-    nodes[1] = &nod2;
-
-    nbnodes = 2;
-
-#elif GAMETYPE == 1 //1 reader
-
-    nod1.setrCode("ICCA",0);
-    nod1.setkeypadpins(K1_A,K1_B,K1_C,K1_1,K1_2,K1_3,K1_4);//3cols,4rows
-    nodes[0] = &nod1;
-
+    nodes[0] = &board;
     nbnodes = 1;
-
-#elif GAMETYPE == 2 //2 readers
-    //1p reader
-    nod1.setrCode("ICCA",1);
-    nod1.setkeypadpins(K1_A,K1_B,K1_C,K1_1,K1_2,K1_3,K1_4);//3cols,4rows
-    nodes[0] = &nod1;
-
-    //set rfid module 2
-    mod2.setPins(R2_DET,&R2_SER);
-    nod2.setRfidModule(&mod2);
-
-    //2p reader
-    nod2.setrCode("ICCA",1);
-    nod2.setkeypadpins(K2_A,K2_B,K2_C,K2_1,K2_2,K2_3,K2_4);//3cols,4rows
-    nodes[1] = &nod2;
-
-    nbnodes = 2;
-
-#elif GAMETYPE == 3 // reader + leboard
-
-    nod1.setrCode("ICCB",2);
-    nodes[0] = &nod1;
-    nodes[1] = &nod2;
-
-    nbnodes = 2;
-
-
-#elif GAMETYPE == 4 // reader + ioboard
-
-    //1p reader
-    nod1.setrCode("ICCA",1);
-    nod1.setkeypadpins(K1_A,K1_B,K1_C,K1_1,K1_2,K1_3,K1_4);//3cols,4rows
-    nodes[0] = &nod1;
-    nodes[1] = &nod2;
-
-    nbnodes = 2;
-
-#else // 2readers + DDR ??? board
-
-    //1p reader
-    nod1.setrCode("ICCB",0);
-    nod1.setkeypadpins(K1_A,K1_B,K1_C,K1_1,K1_2,K1_3,K1_4);//3cols,4rows
-    nodes[0] = &nod1;
-
-    //set rfid module 2
-    mod2.setPins(R2_DET,&R2_SER);
-    nod2.setRfidModule(&mod2);
-
-    //2p reader
-    nod2.setrCode("ICCB",0);
-    nod2.setkeypadpins(K2_A,K2_B,K2_C,K2_1,K2_2,K2_3,K2_4);//3cols,4rows
-    nodes[1] = &nod2;
-
-    nodes[2] = &nod3;
-
-    nbnodes = 3;
-
-
-#endif
-
-
-
-
 }
 
 //
@@ -383,20 +231,7 @@ void sendAnswer(byte* answer)
 
     answer[bufsize-1] = sum;
 
-
     //checksum calc done, let's send it
-
-    //delay if needed
-    if (GAMETYPE !=4) //delay only if game is not sound voltex
-    {
-        unsigned long now = millis();
-        if ((now - lastSent) < MINTIME && (now - lastSent) > 0)  // Check If last packet was too early
-            delay(MINTIME - (now - lastSent));                     // delay required MINTIME between 2 packets
-    }
-
-
-
-
     Serial.write(0xAA);
 
     for (int i=0;i<bufsize;i++)

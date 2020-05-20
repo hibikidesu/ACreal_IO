@@ -26,12 +26,6 @@ private:
     byte volRState;
     unsigned int volL;
     byte volLState;
-    // Software PWM RGB light
-    SoftPWMRGB LED6;
-    // Values for the software PWM RGB light
-    int valLED6_R;
-    int valLED6_G;
-    int valLED6_B;
 };
 
 #endif

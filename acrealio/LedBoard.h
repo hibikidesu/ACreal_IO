@@ -17,12 +17,6 @@ public:
 
 private:
     byte ledStatus[18];
-    // Software PWM RGB light
-    SoftPWMRGB LED6;
-    // Values for the software PWM RGB light
-    int valLED6_R;
-    int valLED6_G;
-    int valLED6_B;
 };
 
 #endif

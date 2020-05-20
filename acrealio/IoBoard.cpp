@@ -40,17 +40,6 @@ IoBoard::IoBoard(char* rCode)
     pinMode(BT_SVC, INPUT);
     digitalWrite(BT_SVC,HIGH);
 
-
-    //pins for volume buttons
-    pinMode(VOLR_A, INPUT);
-    digitalWrite(VOLR_A,HIGH);
-    pinMode(VOLR_B, INPUT);
-    digitalWrite(VOLR_B,HIGH);
-    pinMode(VOLL_A, INPUT);
-    digitalWrite(VOLL_A,HIGH);
-    pinMode(VOLL_B, INPUT);
-    digitalWrite(VOLL_B,HIGH);
-
     //for key lights
     for (int i = 0;i<7; i++) {
         pinMode(lightPin[i], OUTPUT);
@@ -60,21 +49,7 @@ IoBoard::IoBoard(char* rCode)
     pinMode(LED1_R, OUTPUT);
     pinMode(LED1_G, OUTPUT);
     pinMode(LED1_B, OUTPUT);
-    pinMode(LED2_R, OUTPUT);
-    pinMode(LED2_G, OUTPUT);
-    pinMode(LED2_B, OUTPUT);
-    pinMode(LED3_R, OUTPUT);
-    pinMode(LED3_G, OUTPUT);
-    pinMode(LED3_B, OUTPUT);
-    pinMode(LED4_R, OUTPUT);
-    pinMode(LED4_G, OUTPUT);
-    pinMode(LED4_B, OUTPUT);
-    pinMode(LED5_R, OUTPUT);
-    pinMode(LED5_G, OUTPUT);
-    pinMode(LED5_B, OUTPUT);
-    pinMode(LED6_R, OUTPUT);
-    pinMode(LED6_G, OUTPUT);
-    pinMode(LED6_B, OUTPUT);
+
 }
 
 void IoBoard::init()
@@ -82,12 +57,6 @@ void IoBoard::init()
     keys= 0x00;
     keysLights = 0x00;
     test =0;
-
-    LED6.setPins(LED6_R, LED6_G, LED6_B);
-
-    valLED6_R = 0;
-    valLED6_G = 0;
-    valLED6_B = 0;
 
     //for volume encoders
     volR = 0;
@@ -170,8 +139,6 @@ void IoBoard::update()
         break;
     }
     
-    // Update the software PWM RGB light
-    LED6.setPWM(valLED6_R, valLED6_G, valLED6_B);
 }
 
 
@@ -233,25 +200,9 @@ short IoBoard::processRequest(byte* request, byte* answer)
 
 //rgb leds
 
-        analogWrite(LED1_R,request[5+4]<<1);
-        analogWrite(LED1_G,request[5+5]<<1);
-        analogWrite(LED1_B,request[5+6]<<1);
-        analogWrite(LED2_R,request[5+7]<<1);
-        analogWrite(LED2_G,request[5+8]<<1);
-        analogWrite(LED2_B,request[5+9]<<1);
-        analogWrite(LED3_R,request[5+10]<<1);
-        analogWrite(LED3_G,request[5+11]<<1);
-        analogWrite(LED3_B,request[5+12]<<1);
-        analogWrite(LED4_R,request[5+13]<<1);
-        analogWrite(LED4_G,request[5+14]<<1);
-        analogWrite(LED4_B,request[5+15]<<1);
-        analogWrite(LED5_R,request[5+16]<<1);
-        analogWrite(LED5_G,request[5+17]<<1);
-        analogWrite(LED5_B,request[5+18]<<1);
-        // Get the requested values for the software PWM RGB light
-        valLED6_R = request[5+19]<<1;
-        valLED6_G = request[5+20]<<1;
-        valLED6_B = request[5+21]<<1;
+        analogWrite(LED1_R, 255-(request[5+4]<<1));
+        analogWrite(LED1_G, 255-(request[5+5]<<1));
+        analogWrite(LED1_B, 255-(request[5+6]<<1));
 
         /*   input control format:
         byte 0 : 8 high bits of L vol
@@ -286,37 +237,28 @@ short IoBoard::processRequest(byte* request, byte* answer)
 
         memset(answer+5, 0x00, 0x10);
 
-        answer[9+5] = keys >>3;
-        answer[11+5] = keys <<3;
+        answer[9+5] = keys >> 3;
+        answer[11+5] = keys << 3;
 
-        {
-            unsigned int volRreal = volR*SDVX_VOL_SENS;
-            unsigned int volLreal = volL*SDVX_VOL_SENS;
+        unsigned int vl = analogRead(VOL_L);
+        unsigned int vr = analogRead(VOL_R);
 
-            answer[0+5] = volLreal>>2;
-            answer[1+5] = volLreal<<6;
+        answer[0+5] = vl>>2;
+        answer[1+5] = vl<<6;
 
-            answer[2+5] = volRreal>>2;
-            answer[3+5] = volRreal<<6;
+        answer[2+5] = vr>>2;
+        answer[3+5] = vr<<6;
 
-            if (test)
-                answer[1+5] |= 0x20;
-            if (svc)
-                answer[1+5] |= 0x10;
-
-        }
+        if (test)
+            answer[1+5] |= 0x20;
+        if (svc)
+            answer[1+5] |= 0x10;
 
         answer[12+5] = 0x80;
         answer[13+5] = 0x80;
 
-
         break;
-
-
 
     }
 
-
-
 }
-
