@@ -170,7 +170,7 @@ boolean isRequestComplete()
 {
     if (req_i >= 6)               // check if at least minimum size
     {
-        if (req_i >= 6+ request[4]) // if long enough, including data length
+        if (req_i >= 6 + request[4]) // if long enough, including data length
         {
             return true;
         }
@@ -223,9 +223,9 @@ void sendAnswer(byte* answer)
     // checksum calculation
     byte sum = 0;
     int bufsize = 6 + answer[4];
+    int i;
 
-    for (int i=0;i<bufsize-1;i++)
-    {
+    for (i = 0; i < bufsize - 1; i++) {
         sum += answer[i];
     }
 
