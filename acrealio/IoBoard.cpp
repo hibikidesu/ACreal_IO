@@ -86,58 +86,6 @@ void IoBoard::update()
 
     test= !digitalRead(BT_TEST);
     svc= !digitalRead(BT_SVC);
-
-    //read volume encoders
-
-    byte volRS = volRState & 3;
-    
-    if (digitalRead(VOLR_B)) volRS |= 4;
-    if (digitalRead(VOLR_A)) volRS |= 8;
-    
-    volRState = (volRS >> 2);
-    
-    switch (volRS)
-    {
-      case 0: case 5: case 10: case 15:
-        break;
-      case 1: case 7: case 8: case 14:
-        volR++;
-        break;
-      case 2: case 4: case 11: case 13:
-        volR--;
-        break;
-      case 3: case 12:
-        volR += 2;
-        break;
-      default:
-        volR -= 2;
-        break;
-    }
-    
-    byte volLS = volLState & 3;
-    
-    if (digitalRead(VOLL_B)) volLS |= 4;
-    if (digitalRead(VOLL_A)) volLS |= 8;
-    
-    volLState = (volLS >> 2);  
-    
-    switch (volLS)
-    {
-      case 0: case 5: case 10: case 15:
-        break;
-      case 1: case 7: case 8: case 14:
-        volL++;
-        break;
-      case 2: case 4: case 11: case 13:
-        volL--;
-        break;
-      case 3: case 12:
-        volL += 2;
-        break;
-      default:
-        volL -= 2;
-        break;
-    }
     
 }
 
