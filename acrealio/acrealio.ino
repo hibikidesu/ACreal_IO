@@ -28,11 +28,11 @@ byte nbnodes; // nodes count (currently supports 1 or 2)
 byte node_id; //id of first node (may be != 1 when used with other physical nodes)
 
 Node *nodes[MAX_NODES];//nodes array
-IoBoard board("KFCA");//io board
+IoBoard kfca("KFCA");//io board
 
 void setup()
 {
-    nodes[0] = &board;
+    nodes[0] = &kfca;
     nbnodes = 1;
 }
 
@@ -131,33 +131,28 @@ void getRequest()
     {
         byte inByte = Serial.read();
 
-        if (inByte == 0xAA)                   // AA -> new request is coming
-        {
-            if (req_i == 0)
-                Serial.write(0xAA);               // send back AA if previous byte was AA too (init sequence)
+        switch (inByte) {
 
-            escByte = false;
-            req_i = 0;                          // clear request buffer
-        }
-
-        if (inByte == 0xFF)                   // if FF, this means next byte is an escaped byte
-        {
-            escByte = true;
-        }
-
-
-        if (inByte != 0xFF && inByte != 0xAA) // if the value is not AA nor FF, add it to the request buffer
-        {
-            if (escByte)                        // if this is an escaped byte
-            {
-                inByte = ~inByte;
+            case 0xAA:  // AA -> new request is coming
+                if (req_i == 0) {
+                    Serial.write(0xAA); // send back AA if previous byte was AA too (init sequence)
+                }
                 escByte = false;
-            }
+                req_i = 0;  // clear request buffer
+                break;
 
-            // add byte to the request buffer
-            request[req_i] = inByte;
-            req_i++;
+            case 0xFF:  // if FF, this means next byte is an escaped byte
+                escByte = true;
+                break;
 
+            default:
+                if (escByte) {
+                    inByte = ~inByte;
+                    escByte = false;
+                }
+                request[req_i] = inByte;
+                req_i++;
+                break;
 
         }
     }
@@ -202,9 +197,7 @@ void processRequest() {
     byte answer[256];
     rd->processRequest(request, answer);//have it process the request
     sendAnswer(answer);
-
 }
-
 
 //
 // when a command is not for any of our nodes, send it to next node as is
@@ -212,8 +205,6 @@ void processRequest() {
 void forwardRequest() {
     sendAnswer(request);
 }
-
-
 
 //
 // Send answer
@@ -259,7 +250,7 @@ void sendAnswer(byte* answer)
 //
 long detRate()
 {
-    long baudrates[] = {57600,38400,19200};//baudrates to try
+    long baudrates[] = {115200,57600,38400,19200};//baudrates to try
     int i=0;
     boolean allAA;
 
@@ -269,8 +260,9 @@ long detRate()
         if (i> (sizeof(baudrates)/sizeof(baudrates[0])) -1 )
             i=0;
         //flush in and out buffer
-        while (Serial.available())
+        while (Serial.available()) {
             Serial.read();
+        }
 
         Serial.flush();
         Serial.end();
