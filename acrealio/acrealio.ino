@@ -44,23 +44,19 @@ void loop()
     if (initDone) {
         for (int r=0;r<nbnodes;r++)
         {
-            nodes[r]->update();//update each node
+            nodes[r]->update();                     //update each node
         }
 
-        if ((millis() - lastRecv) > 50000) {    // If no comm for 50sec, timeout
-            initDone = false;                     // Reset init
-            //digitalWrite(13, LOW);
-            Serial.end();                         // and close serial port
+        if ((millis() - lastRecv) > 50000) {        // If no comm for 50sec, timeout
+            initDone = false;                       // Reset init
+            Serial.end();                           // and close serial port
         }
     } else {
-        //if reader is not initialized
         detRate();// Detect baud rate
         initNodes(); //init each node
         lastRecv = millis();
 
         initDone = true;
-        //digitalWrite(13, HIGH);
-
     }
 }
 
